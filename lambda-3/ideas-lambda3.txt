@@ -1,0 +1,21 @@
+Deteccion de errores de tipo:
+    No! iszero true
+    No! if 1 then true else false
+    No! is iszero 3 then 0 else false
+
+Incorporacion explicita de tipos: Bool, Nat y funciones.
+
+Implementacion explicita de una funcion de chequeo de tipos (type checking)
+como paso previo a la evacuacion de los terminos.
+
+Esto permitira tambien, tras evaluar, no solo escri ir el termino resultabtem sino tambien su tipo asociado.
+
+Tipado expkicito de los parametros de las abstracciones:
+
+    No! let id = lambda x. x in id 3
+    Si! let id_bool = lambda x : Bool . x in id:bool true
+    Si! let id_nat = lambda x : Nat . x in id_nat 3
+
+¿Perdida del polimorfismo?
+
+Aparicion de un nuevo constructor del tipo term: TmLetIn (traducido antes como aplicacon y abstraccion)
