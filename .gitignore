@@ -1,5 +1,4 @@
 .DS_Store
-top
 lambda.cmi
 lambda.cmo
 lexer.cmi
@@ -8,3 +7,4 @@ main.cmi
 main.cmo
 parser.cmi
 parser.cmo
+top
