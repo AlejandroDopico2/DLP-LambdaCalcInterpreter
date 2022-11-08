@@ -1,2 +1,10 @@
 .DS_Store
-
+top
+lambda.cmi
+lambda.cmo
+lexer.cmi
+lexer.cmo
+main.cmi
+main.cmo
+parser.cmi
+parser.cmo
