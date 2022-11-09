@@ -1,4 +1,3 @@
-
 open Parsing;;
 open Lexing;;
 
@@ -7,13 +6,26 @@ open Parser;;
 open Lexer;;
 
 
+let check_line line = 
+  try
+    String.rindex_from line ((String.rindex line ';')-1)  ';'; true
+  with
+    Not_found -> false 
+    
+  ;;
+let rec read_line_loop string =
+  let line = read_line() in 
+    if check_line line then String.sub (string ^ " " ^ line) 0 (String.length(string ^ " " ^ line)-2)  else string ^ " " ^ read_line_loop (line)
+  ;;
+
+
 let top_level_loop () =
   print_endline "Evaluator of lambda expressions...";
   let rec loop ctx =
     print_string ">> ";
     flush stdout; 
     try
-      let tm = s token (from_string (read_line ())) in
+      let tm = s token (from_string (read_line_loop "")) in
       let tyTm = typeof ctx tm in
       print_endline (string_of_term (eval tm) ^ " : " ^ string_of_ty tyTm);
       loop ctx
@@ -32,7 +44,6 @@ let top_level_loop () =
   in
     loop emptyctx
   ;;
-
 top_level_loop ()
 ;;
 
