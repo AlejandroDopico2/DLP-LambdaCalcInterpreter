@@ -18,31 +18,28 @@ let rec read_line_loop string =
     if check_line line then String.sub (string ^ " " ^ line) 0 (String.length(string ^ " " ^ line)-2)  else string ^ " " ^ read_line_loop (line)
   ;;
 
-
 let top_level_loop () =
   print_endline "Evaluator of lambda expressions...";
-  let rec loop ctx =
+  let rec loop (vctx, tctx) =
     print_string ">> ";
     flush stdout; 
     try
-      let tm = s token (from_string (read_line_loop "")) in
-      let tyTm = typeof ctx tm in
-      print_endline (string_of_term (eval tm) ^ " : " ^ string_of_ty tyTm);
-      loop ctx
+      let c = s token (from_string (read_line_loop "")) in
+      loop (execute (vctx, tctx) c)
     with
        Lexical_error ->
          print_endline "lexical error";
-         loop ctx
+         loop (vctx, tctx)
      | Parse_error ->
          print_endline "syntax error";
-         loop ctx
+         loop (vctx, tctx)
      | Type_error e ->
          print_endline ("type error: " ^ e);
-         loop ctx
+         loop (vctx, tctx)
      | End_of_file ->
          print_endline "...bye!!!"
   in
-    loop emptyctx
+    loop (emptyctx, emptyctx)
   ;;
 top_level_loop ()
 ;;

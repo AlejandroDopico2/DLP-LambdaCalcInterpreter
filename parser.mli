@@ -24,4 +24,4 @@ type token =
   | STRINGV of (string)
 
 val s :
-  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Lambda.term
+  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Lambda.command
