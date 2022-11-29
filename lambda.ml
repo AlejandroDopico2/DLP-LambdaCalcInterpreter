@@ -5,6 +5,7 @@ type ty =
     TyBool
   | TyNat
   | TyArr of ty * ty
+  | TyString
 ;;
 
 type 'a context =
@@ -24,6 +25,8 @@ type term =
   | TmApp of term * term
   | TmLetIn of string * term * term
   | TmFix of term
+  | TmString of term
+  | TmConcat of term * term
 ;;
 
 type command = 
@@ -55,6 +58,7 @@ let rec string_of_ty ty = match ty with
       "Nat"
   | TyArr (ty1, ty2) ->
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
+  (* | TyString -> *)
 ;;
 
 exception Type_error of string
@@ -131,6 +135,9 @@ let rec typeof ctx tm = match tm with
             if tyT11 = tyT12 then tyT12
             else raise (Type_error "result of body not compatible with domain")
         | _ -> raise (Type_error "arrow type expected"))
+
+  | TmString t1 ->
+      TyString 
 ;;
 
 
@@ -167,6 +174,15 @@ let rec string_of_term = function
       "let " ^ s ^ " = " ^ string_of_term t1 ^ " in " ^ string_of_term t2
   | TmFix t -> 
       "(fix " ^ string_of_term t ^ ")"
+  | TmString s ->
+      s
+  | TmConcat (t1, t2) ->
+      let rec c t1 t2 = match t1, t2 with
+          TmString t1, TmString t2 -> t1 ^ t2
+        | TmString t1, _ -> t1 ^ string_of_term t2 
+        | _, TmString t2 -> string_of_term t1 ^ t2
+        | _, _ -> string_of_term t1 ^ string_of_term t2 
+      in c t1 t2
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -341,6 +357,10 @@ let rec eval1 vctx tm = match tm with
 
   | TmVar s ->
       getbinding vctx s
+
+  | TmString s ->
+      let s' = eval1 vctx s in
+      TmString s'
       
   | _ ->
       raise NoRuleApplies
