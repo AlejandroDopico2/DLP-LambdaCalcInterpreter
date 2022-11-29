@@ -1,4 +1,3 @@
-
 (* TYPE DEFINITIONS *)
 
 type ty =
@@ -25,7 +24,7 @@ type term =
   | TmApp of term * term
   | TmLetIn of string * term * term
   | TmFix of term
-  | TmString of term
+  | TmString of string
   | TmConcat of term * term
 ;;
 
@@ -58,7 +57,8 @@ let rec string_of_ty ty = match ty with
       "Nat"
   | TyArr (ty1, ty2) ->
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
-  (* | TyString -> *)
+  | TyString  ->
+      "String"
 ;;
 
 exception Type_error of string
@@ -136,8 +136,12 @@ let rec typeof ctx tm = match tm with
             else raise (Type_error "result of body not compatible with domain")
         | _ -> raise (Type_error "arrow type expected"))
 
-  | TmString t1 ->
+  | TmString _  ->
       TyString 
+  | TmConcat (t1, t2) ->
+      if typeof ctx t1 = TyString && typeof ctx t2 = TyString then TyString
+      else raise (Type_error "arrow type expected")
+(* Comprobar si son iguales si no error *)
 ;;
 
 
@@ -176,13 +180,8 @@ let rec string_of_term = function
       "(fix " ^ string_of_term t ^ ")"
   | TmString s ->
       s
-  | TmConcat (t1, t2) ->
-      let rec c t1 t2 = match t1, t2 with
-          TmString t1, TmString t2 -> t1 ^ t2
-        | TmString t1, _ -> t1 ^ string_of_term t2 
-        | _, TmString t2 -> string_of_term t1 ^ t2
-        | _, _ -> string_of_term t1 ^ string_of_term t2 
-      in c t1 t2
+  | TmConcat (s1, s2) -> 
+      string_of_term s1 ^ string_of_term s2
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -220,6 +219,10 @@ let rec free_vars tm = match tm with
       lunion (ldif (free_vars t2) [s]) (free_vars t1)
   | TmFix t ->
       free_vars t
+  | TmString _ ->
+    []
+  | TmConcat (t1, t2) ->
+    lunion (free_vars t1) (free_vars t2)
 ;;
 
 let rec fresh_name x l =
@@ -261,6 +264,10 @@ let rec subst x s tm = match tm with
                 TmLetIn (z, subst x s t1, subst x s (subst y (TmVar z) t2))
   | TmFix t ->
       TmFix (subst x s t)
+  | TmString s ->
+      TmString s
+  | TmConcat (s1, s2) ->
+       TmConcat (subst x s s1 ,subst x s s2)
 ;;
 
 let rec isnumericval tm = match tm with
@@ -272,6 +279,7 @@ let rec isnumericval tm = match tm with
 let rec isval tm = match tm with
     TmTrue  -> true
   | TmFalse -> true
+  | TmString _ -> true
   | TmAbs _ -> true
   | t when isnumericval t -> true
   | _ -> false
@@ -359,9 +367,19 @@ let rec eval1 vctx tm = match tm with
       getbinding vctx s
 
   | TmString s ->
-      let s' = eval1 vctx s in
-      TmString s'
+      TmString s
+
+  | TmConcat (TmString t1, TmString t2) ->
+      TmString (t1 ^ t2)
       
+  | TmConcat (TmString t1, t2) ->
+      let t2' = eval1 vctx t2 in
+      TmConcat (TmString t1, t2') 
+
+  | TmConcat (t1, t2) ->
+      let t1' = eval1 vctx t1 in
+      TmConcat (t1', t2) 
+
   | _ ->
       raise NoRuleApplies
 ;;
