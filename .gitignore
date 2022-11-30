@@ -8,3 +8,6 @@ main.cmo
 parser.cmi
 parser.cmo
 top
+lexer.ml
+parser.mli
+parser.ml

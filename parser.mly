@@ -83,7 +83,7 @@ atomicTerm :
             0 -> TmZero
           | n -> TmSucc (f (n-1))
         in f $1 }
-   | STRV {TmString $1}
+  | STRV {TmString $1}
 
 ty :
     atomicTy
@@ -98,6 +98,6 @@ atomicTy :
       { TyBool }
   | NAT
       { TyNat }
-    | STRING 
-        { TyString}
+  | STRING 
+      { TyString}
 

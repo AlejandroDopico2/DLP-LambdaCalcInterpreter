@@ -140,7 +140,7 @@ let rec typeof ctx tm = match tm with
       TyString 
   | TmConcat (t1, t2) ->
       if typeof ctx t1 = TyString && typeof ctx t2 = TyString then TyString
-      else raise (Type_error "arrow type expected")
+      else raise (Type_error "string type expected")
 (* Comprobar si son iguales si no error *)
 ;;
 
@@ -179,7 +179,7 @@ let rec string_of_term = function
   | TmFix t -> 
       "(fix " ^ string_of_term t ^ ")"
   | TmString s ->
-      s
+      "\"" ^ s ^ "\""
   | TmConcat (s1, s2) -> 
       string_of_term s1 ^ string_of_term s2
 ;;
@@ -365,9 +365,6 @@ let rec eval1 vctx tm = match tm with
 
   | TmVar s ->
       getbinding vctx s
-
-  | TmString s ->
-      TmString s
 
   | TmConcat (TmString t1, TmString t2) ->
       TmString (t1 ^ t2)
