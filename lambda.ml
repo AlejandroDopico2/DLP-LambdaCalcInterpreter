@@ -5,6 +5,8 @@ type ty =
   | TyNat
   | TyArr of ty * ty
   | TyString
+  | TyTuple
+  | TyRecord
 ;;
 
 type 'a context =
@@ -24,6 +26,8 @@ type term =
   | TmApp of term * term
   | TmLetIn of string * term * term
   | TmFix of term
+  | TmTuple of term
+  | TmRecord of string * term list
   | TmString of string
   | TmConcat of term * term
 ;;

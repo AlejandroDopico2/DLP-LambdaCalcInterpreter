@@ -27,6 +27,9 @@
 %token COLON
 %token ARROW
 %token EOF
+%token COMMA
+%token LBRACE
+%token RBRACE
 
 %token <int> INTV
 %token <string> STRINGV
@@ -68,6 +71,14 @@ appTerm :
         { TmConcat ($2, $3) }
   | appTerm atomicTerm
       { TmApp ($1, $2) }
+
+pathTerm :
+    DOT y un id
+        {}
+    |DOT y un int
+        {}
+    |atomicTerm
+        { $1 }
 
 atomicTerm :
     LPAREN term RPAREN
