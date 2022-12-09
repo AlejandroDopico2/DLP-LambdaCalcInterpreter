@@ -29,7 +29,7 @@ type term =
   (* | TmRecord of string * term list *)
   | TmString of string
   | TmConcat of term * term
-  (* | TmProj of term * string *)
+  | TmProj of term * string
 ;;
 
 type command = 

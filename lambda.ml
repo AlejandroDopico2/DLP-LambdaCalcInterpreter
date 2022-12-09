@@ -30,7 +30,7 @@ type term =
   (* | TmRecord of (string * term) list *)
   | TmString of string
   | TmConcat of term * term
-  (* | TmProj of term * string *)
+  | TmProj of term * string
 ;;
 
 type command = 
@@ -154,6 +154,12 @@ let rec typeof ctx tm = match tm with
       else raise (Type_error "string type expected")
   | TmTuple t1 ->
       TyTuple (List.map (typeof ctx) t1)
+
+  | TmProj (t, s) ->
+    (match typeof ctx t with
+      TyTuple list -> (try List.nth list (int_of_string s - 1) with
+        | _ -> raise (Type_error ("label " ^ s ^ "not found")))
+      | _ -> raise (Type_error "tuple type expective"))
       (* let rec aux tuple ctx list = 
         [] -> list
       | h:: t -> (typeof ctx h)::list 
@@ -205,6 +211,8 @@ let rec string_of_term = function
       | [] -> raise (Invalid_argument "tuple cannot be empty")
     in "(" ^ aux t ^ ")" 
 
+  | TmProj (t, s) -> string_of_term t ^ "." ^ s
+
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -253,6 +261,8 @@ let rec free_vars tm = match tm with
         | [] -> []
       in aux t
 
+  | TmProj (t, _) -> free_vars t
+
 ;;
 
 let rec fresh_name x l =
@@ -300,6 +310,9 @@ let rec subst x s tm = match tm with
        TmConcat (subst x s s1 ,subst x s s2)
   | TmTuple t ->
       TmTuple (List.map (subst x s) t)
+
+  | TmProj (t, lb) ->
+    TmProj (subst x s t, lb)
 ;;
 
 let rec isnumericval tm = match tm with
@@ -417,6 +430,12 @@ let rec eval1 vctx tm = match tm with
       | ti::rest ->
           let ti' = eval1 vctx ti in ti'::rest
       in let tuple' = evalfield tuple in TmTuple tuple'
+
+  | TmProj (TmTuple list as v, s) when isval v ->
+    List.nth list (int_of_string s - 1)
+
+  | TmProj (t, s) ->
+    let t' = eval1 vctx t in TmProj (t', s)
       
   | _ ->
       raise NoRuleApplies

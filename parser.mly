@@ -59,26 +59,26 @@ term :
       { TmLetIn ($2, TmFix ( TmAbs ($2, $4, $6)), $8) }
 
 appTerm :
-    atomicTerm
+    pathTerm
       { $1 }
-  | SUCC atomicTerm
+  | SUCC pathTerm
       { TmSucc $2 }
-  | PRED atomicTerm
+  | PRED pathTerm
       { TmPred $2 }
-  | ISZERO atomicTerm
+  | ISZERO pathTerm
       { TmIsZero $2 }
-  | CONCAT atomicTerm atomicTerm
+  | CONCAT pathTerm pathTerm
         { TmConcat ($2, $3) }
-  | appTerm atomicTerm
+  | appTerm pathTerm 
       { TmApp ($1, $2) }
 
-// pathTerm :
-//     | pathTerm DOT STRINGV
-//         {}
-//     | pathTerm DOT INTV
-//         { TmProj ($1, string_of_int $3) }
-//     | atomicTerm
-//         { $1 }
+pathTerm :
+    | pathTerm DOT STRINGV
+        { TmProj ($1, $3) }
+    | pathTerm DOT INTV
+        { TmProj ($1, string_of_int $3) }
+    | atomicTerm
+        { $1 }
 
 atomicTerm :
     LPAREN term RPAREN
