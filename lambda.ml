@@ -204,12 +204,12 @@ let rec string_of_term = function
       "\"" ^ s ^ "\""
   | TmConcat (s1, s2) -> 
       string_of_term s1 ^ string_of_term s2
-  | TmTuple t ->
-    let rec aux list = match list with
-        h::[] -> string_of_term h
-      | h::t -> (string_of_term h ^ ", ") ^ aux t
-      | [] -> raise (Invalid_argument "tuple cannot be empty")
-    in "(" ^ aux t ^ ")" 
+  | TmTuple (list) ->
+    let rec aux = function
+      | [] -> ""
+      | [h] -> string_of_term h
+      | h::t -> string_of_term h ^ ", " ^ aux t
+    in "(" ^ aux list ^ ")" 
 
   | TmProj (t, s) -> string_of_term t ^ "." ^ s
 
@@ -326,6 +326,7 @@ let rec isval tm = match tm with
   | TmFalse -> true
   | TmString _ -> true
   | TmAbs _ -> true
+  | TmTuple list -> List.for_all (fun t -> isval t) list
   | t when isnumericval t -> true
   | _ -> false
 ;;
