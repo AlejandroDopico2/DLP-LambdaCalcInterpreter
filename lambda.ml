@@ -5,8 +5,8 @@ type ty =
   | TyNat
   | TyArr of ty * ty
   | TyString
-  | TyTuple
-  | TyRecord
+  | TyTuple of ty list
+  (* | TyRecord *)
 ;;
 
 type 'a context =
@@ -26,10 +26,11 @@ type term =
   | TmApp of term * term
   | TmLetIn of string * term * term
   | TmFix of term
-  | TmTuple of term
-  | TmRecord of string * term list
+  | TmTuple of term list
+  (* | TmRecord of (string * term) list *)
   | TmString of string
   | TmConcat of term * term
+  (* | TmProj of term * string *)
 ;;
 
 type command = 
@@ -63,6 +64,12 @@ let rec string_of_ty ty = match ty with
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
   | TyString  ->
       "String"
+  | TyTuple ty ->
+      let rec aux list = match list with
+          h::[] -> string_of_ty h
+        | h::t -> (string_of_ty h ^ ", ")  ^ aux t
+        | [] -> raise (Invalid_argument "tuple cannot be empty")
+      in "{" ^ aux ty ^ "}" 
 ;;
 
 exception Type_error of string
@@ -145,7 +152,12 @@ let rec typeof ctx tm = match tm with
   | TmConcat (t1, t2) ->
       if typeof ctx t1 = TyString && typeof ctx t2 = TyString then TyString
       else raise (Type_error "string type expected")
-(* Comprobar si son iguales si no error *)
+  | TmTuple t1 ->
+      TyTuple (List.map (typeof ctx) t1)
+      (* let rec aux tuple ctx list = 
+        [] -> list
+      | h:: t -> (typeof ctx h)::list 
+      in aux t1 ctx []  *)
 ;;
 
 
@@ -186,6 +198,13 @@ let rec string_of_term = function
       "\"" ^ s ^ "\""
   | TmConcat (s1, s2) -> 
       string_of_term s1 ^ string_of_term s2
+  | TmTuple t ->
+    let rec aux list = match list with
+        h::[] -> string_of_term h
+      | h::t -> (string_of_term h ^ ", ") ^ aux t
+      | [] -> raise (Invalid_argument "tuple cannot be empty")
+    in "(" ^ aux t ^ ")" 
+
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -227,6 +246,13 @@ let rec free_vars tm = match tm with
     []
   | TmConcat (t1, t2) ->
     lunion (free_vars t1) (free_vars t2)
+  | TmTuple t ->
+      let rec aux list = match list with
+        | h::[] -> free_vars h
+        | h::t -> lunion (free_vars h) (aux t)
+        | [] -> []
+      in aux t
+
 ;;
 
 let rec fresh_name x l =
@@ -272,6 +298,8 @@ let rec subst x s tm = match tm with
       TmString s
   | TmConcat (s1, s2) ->
        TmConcat (subst x s s1 ,subst x s s2)
+  | TmTuple t ->
+      TmTuple (List.map (subst x s) t)
 ;;
 
 let rec isnumericval tm = match tm with
@@ -381,6 +409,15 @@ let rec eval1 vctx tm = match tm with
       let t1' = eval1 vctx t1 in
       TmConcat (t1', t2) 
 
+  | TmTuple tuple ->
+      let rec evalfield = function
+        [] -> raise NoRuleApplies
+      | vi::rest when isval vi ->
+          let rest' = evalfield rest in vi::rest'
+      | ti::rest ->
+          let ti' = eval1 vctx ti in ti'::rest
+      in let tuple' = evalfield tuple in TmTuple tuple'
+      
   | _ ->
       raise NoRuleApplies
 ;;

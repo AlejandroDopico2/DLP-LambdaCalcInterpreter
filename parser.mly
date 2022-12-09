@@ -72,13 +72,13 @@ appTerm :
   | appTerm atomicTerm
       { TmApp ($1, $2) }
 
-pathTerm :
-    DOT y un id
-        {}
-    |DOT y un int
-        {}
-    |atomicTerm
-        { $1 }
+// pathTerm :
+//     | pathTerm DOT STRINGV
+//         {}
+//     | pathTerm DOT INTV
+//         { TmProj ($1, string_of_int $3) }
+//     | atomicTerm
+//         { $1 }
 
 atomicTerm :
     LPAREN term RPAREN
@@ -95,6 +95,14 @@ atomicTerm :
           | n -> TmSucc (f (n-1))
         in f $1 }
   | STRV {TmString $1}
+  | LBRACE interTerm RBRACE
+      { TmTuple $2 }
+
+interTerm : 
+    term 
+      { [$1] }
+  | term COMMA interTerm
+      { $1::$3 }
 
 ty :
     atomicTy
