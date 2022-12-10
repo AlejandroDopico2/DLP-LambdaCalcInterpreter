@@ -95,14 +95,22 @@ atomicTerm :
           | n -> TmSucc (f (n-1))
         in f $1 }
   | STRV {TmString $1}
-  | LBRACE interTerm RBRACE
+  | LBRACE tupleTerm RBRACE
       { TmTuple $2 }
+  | LBRACE recordTerm RBRACE
+      { TmRecord $2 }
 
-interTerm : 
+tupleTerm : 
     term 
       { [$1] }
-  | term COMMA interTerm
+  | term COMMA tupleTerm
       { $1::$3 }
+
+recordTerm :
+    STRINGV COLON term
+        { [($1, $3)]}
+  | STRINGV COLON term COMMA recordTerm
+        { ($1, $3)::$5 }
 
 ty :
     atomicTy
