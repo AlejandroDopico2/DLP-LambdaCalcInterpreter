@@ -7,6 +7,7 @@ type ty =
   | TyString
   | TyTuple of ty list
   | TyRecord of (string * ty) list
+  | TyList of ty list
 ;;
 
 type 'a context =
@@ -31,6 +32,7 @@ type term =
   | TmString of string
   | TmConcat of term * term
   | TmProj of term * string
+  | TmList of term list
 ;;
 
 type command = 
@@ -76,6 +78,8 @@ let rec string_of_ty ty = match ty with
       | (i, h)::t -> (i ^ ":" ^ string_of_ty h ^ ", ")  ^ aux t
       | [] -> raise (Invalid_argument "record cannot be empty")
     in "{" ^ aux ty ^ "}" 
+  | TyList ty ->
+      string_of_ty (List.hd ty) ^ " list"
         
 ;;
 
@@ -170,6 +174,9 @@ let rec typeof ctx tm = match tm with
     | TyRecord list -> (try List.assoc s list with
         | _ -> raise (Type_error ("label " ^ s  ^ " not found")))
       | _ -> raise (Type_error "tuple type expective"))
+  | TmList list ->
+      if List.for_all (function x -> typeof ctx x = typeof ctx (List.hd list)) (List.tl list) then TyList (List.map (typeof ctx) list)
+      else raise (Type_error ("list type should be all same"))
 ;;
 
 
@@ -225,7 +232,12 @@ let rec string_of_term = function
       in "(" ^ aux list ^ ")" 
 
   | TmProj (t, s) -> string_of_term t ^ "." ^ s
-
+  | TmList (list) ->
+      let rec aux = function
+        | [] -> ""
+        | [h] -> string_of_term h
+        | h::t -> string_of_term h ^ ", " ^ aux t
+      in "[" ^ aux list ^ "]" 
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -280,6 +292,12 @@ let rec free_vars tm = match tm with
       | [] -> []
     in aux t
   | TmProj (t, _) -> free_vars t
+  | TmList l ->
+      let rec aux list = match list with
+        | h::[] -> free_vars h
+        | h::t -> lunion (free_vars h) (aux t)
+        | [] -> []
+      in aux l
 
 ;;
 
@@ -332,6 +350,8 @@ let rec subst x s tm = match tm with
       TmRecord (List.combine (List.map fst t) (List.map (subst x s) (List.map snd t)))
   | TmProj (t, lb) ->
       TmProj (subst x s t, lb)
+  | TmList l ->
+      TmList (List.map (subst x s) l)
 ;;
 
 let rec isnumericval tm = match tm with

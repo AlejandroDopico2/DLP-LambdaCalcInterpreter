@@ -30,6 +30,8 @@
 %token COMMA
 %token LBRACE
 %token RBRACE
+%token LBRACKET
+%token RBRACKET
 
 %token <int> INTV
 %token <string> STRINGV
@@ -99,6 +101,8 @@ atomicTerm :
       { TmTuple $2 }
   | LBRACE recordTerm RBRACE
       { TmRecord $2 }
+  | LBRACKET listTerm RBRACKET
+      { TmList $2 }
 
 tupleTerm : 
     term 
@@ -111,6 +115,14 @@ recordTerm :
         { [($1, $3)]}
   | STRINGV COLON term COMMA recordTerm
         { ($1, $3)::$5 }
+
+listTerm : 
+    term 
+      { [$1] }
+  | term COMMA listTerm
+      { $1::$3 }
+
+
 
 ty :
     atomicTy
