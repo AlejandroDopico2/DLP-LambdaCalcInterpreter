@@ -33,6 +33,7 @@ type term =
   | TmConcat of term * term
   | TmProj of term * string
   | TmNil of ty
+  | TmCons of ty * term * term
 ;;
 
 type command = 
@@ -149,6 +150,7 @@ let rec typeof ctx tm = match tm with
       let ctx' = addbinding ctx x tyT1 in
       typeof ctx' t2
 
+    (* T-Fix *)
   | TmFix t1 ->
       let tyT1 = typeof ctx t1 in
       (match tyT1 with
@@ -173,8 +175,21 @@ let rec typeof ctx tm = match tm with
     | TyRecord list -> (try List.assoc s list with
         | _ -> raise (Type_error ("label " ^ s  ^ " not found")))
       | _ -> raise (Type_error "tuple type expective"))
+
+    (* T-Cons *)
   | TmNil t ->
       TyList t
+
+    (* T-Cons *)
+  | TmCons (ty, t1, t2) ->
+      let tyT1 = typeof ctx t1 in
+      let tyT2 = typeof ctx t2 in
+      (match tyT2 with
+          TyList ty21 ->
+            if ty21 = tyT1 then TyList ty
+            else raise (Type_error "Types of list don't match")
+        | _ -> raise (Type_error "arrow type expected")
+      )
   ;;
 
 
@@ -229,6 +244,8 @@ let rec string_of_term = function
       in "(" ^ aux list ^ ")" 
   | TmProj (t, s) -> string_of_term t ^ "." ^ s
   | TmNil t -> "nil[" ^ string_of_ty t ^ "]"
+  | TmCons (ty, t1, t2) ->
+      "cons[" ^ string_of_ty ty ^ "] " ^ string_of_term t1 ^ " " ^ string_of_term t2
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -285,6 +302,8 @@ let rec free_vars tm = match tm with
   | TmProj (t, _) -> free_vars t
   | TmNil _ ->
       []
+  | TmCons (ty, t1, t2) ->
+      lunion (free_vars t1) (free_vars t2)
 
 ;;
 
@@ -339,6 +358,8 @@ let rec subst x s tm = match tm with
       TmProj (subst x s t, lb)
   | TmNil t ->
       TmNil t
+  | TmCons (ty, t1, t2) ->
+      TmCons (ty, (subst x s t1), (subst x s t2))
 ;;
 
 let rec isnumericval tm = match tm with
@@ -476,6 +497,14 @@ let rec eval1 vctx tm = match tm with
 
   | TmProj (t, s) ->
     let t' = eval1 vctx t in TmProj (t', s)
+
+  (* E-Cons2*)
+  | TmCons (ty, v1, t2) when isval v1 ->
+    let t2' = eval1 vctx t2 in TmCons (ty, v1, t2')
+
+    (* E-Cons1*)
+  | TmCons (ty, t1, t2) ->
+    let t1' = eval1 vctx t1 in TmCons (ty, t1', t2)
       
   | _ ->
       raise NoRuleApplies

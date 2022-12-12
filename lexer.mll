@@ -24,6 +24,7 @@ rule token = parse
   | "Nat"       { NAT }
   | "String"    { STRING }
   | "nil"       { NIL }
+  | "cons"      { CONS }
   | '('         { LPAREN }
   | ')'         { RPAREN }
   | '.'         { DOT }

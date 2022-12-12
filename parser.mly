@@ -20,6 +20,7 @@
 %token CONCAT
 %token STRING
 %token NIL
+%token CONS
 
 %token LPAREN
 %token RPAREN
@@ -71,9 +72,7 @@ appTerm :
   | ISZERO pathTerm
       { TmIsZero $2 }
   | CONCAT pathTerm pathTerm
-        { TmConcat ($2, $3) }
-  | NIL LBRACKET ty RBRACKET
-        { TmNil $3 }
+      { TmConcat ($2, $3) }
   | appTerm pathTerm 
       { TmApp ($1, $2) }
 
@@ -104,6 +103,10 @@ atomicTerm :
       { TmTuple $2 }
   | LBRACE recordTerm RBRACE
       { TmRecord $2 }
+  | NIL LBRACKET ty RBRACKET
+      { TmNil $3 }
+  | CONS LBRACKET ty RBRACKET atomicTerm atomicTerm
+      { TmCons ($3, $5, $6) }
 
 tupleTerm : 
     term 

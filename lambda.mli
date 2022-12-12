@@ -32,6 +32,7 @@ type term =
   | TmConcat of term * term
   | TmProj of term * string
   | TmNil of ty
+  | TmCons of ty * term * term
 ;;
 
 type command = 
