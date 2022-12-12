@@ -19,6 +19,7 @@
 %token NAT
 %token CONCAT
 %token STRING
+%token NIL
 
 %token LPAREN
 %token RPAREN
@@ -71,6 +72,8 @@ appTerm :
       { TmIsZero $2 }
   | CONCAT pathTerm pathTerm
         { TmConcat ($2, $3) }
+  | NIL LBRACKET ty RBRACKET
+        { TmNil $3 }
   | appTerm pathTerm 
       { TmApp ($1, $2) }
 
@@ -101,8 +104,6 @@ atomicTerm :
       { TmTuple $2 }
   | LBRACE recordTerm RBRACE
       { TmRecord $2 }
-  | LBRACKET listTerm RBRACKET
-      { TmList $2 }
 
 tupleTerm : 
     term 
@@ -115,14 +116,6 @@ recordTerm :
         { [($1, $3)]}
   | STRINGV COLON term COMMA recordTerm
         { ($1, $3)::$5 }
-
-listTerm : 
-    term 
-      { [$1] }
-  | term COMMA listTerm
-      { $1::$3 }
-
-
 
 ty :
     atomicTy

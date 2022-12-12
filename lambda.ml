@@ -7,7 +7,7 @@ type ty =
   | TyString
   | TyTuple of ty list
   | TyRecord of (string * ty) list
-  | TyList of ty list
+  | TyList of ty
 ;;
 
 type 'a context =
@@ -32,7 +32,7 @@ type term =
   | TmString of string
   | TmConcat of term * term
   | TmProj of term * string
-  | TmList of term list
+  | TmNil of ty
 ;;
 
 type command = 
@@ -79,8 +79,7 @@ let rec string_of_ty ty = match ty with
       | [] -> raise (Invalid_argument "record cannot be empty")
     in "{" ^ aux ty ^ "}" 
   | TyList ty ->
-      string_of_ty (List.hd ty) ^ " list"
-        
+      string_of_ty ty ^ " list"
 ;;
 
 exception Type_error of string
@@ -174,10 +173,9 @@ let rec typeof ctx tm = match tm with
     | TyRecord list -> (try List.assoc s list with
         | _ -> raise (Type_error ("label " ^ s  ^ " not found")))
       | _ -> raise (Type_error "tuple type expective"))
-  | TmList list ->
-      if List.for_all (function x -> typeof ctx x = typeof ctx (List.hd list)) (List.tl list) then TyList (List.map (typeof ctx) list)
-      else raise (Type_error ("list type should be all same"))
-;;
+  | TmNil t ->
+      TyList t
+  ;;
 
 
 (* TERMS MANAGEMENT (EVALUATION) *)
@@ -217,27 +215,20 @@ let rec string_of_term = function
       "\"" ^ s ^ "\""
   | TmConcat (s1, s2) -> 
       string_of_term s1 ^ string_of_term s2
-  | TmTuple (list) ->
+  | TmTuple list ->
     let rec aux = function
       | [] -> ""
       | [h] -> string_of_term h
       | h::t -> string_of_term h ^ ", " ^ aux t
     in "(" ^ aux list ^ ")" 
-
-    | TmRecord (list) ->
+  | TmRecord list ->
       let rec aux = function
         | [] -> ""
         | [(i, h)] -> i ^ " : " ^ string_of_term h
         | (i, h)::t -> i ^ " : " ^ string_of_term h ^ ", " ^ aux t
       in "(" ^ aux list ^ ")" 
-
   | TmProj (t, s) -> string_of_term t ^ "." ^ s
-  | TmList (list) ->
-      let rec aux = function
-        | [] -> ""
-        | [h] -> string_of_term h
-        | h::t -> string_of_term h ^ ", " ^ aux t
-      in "[" ^ aux list ^ "]" 
+  | TmNil t -> "nil[" ^ string_of_ty t ^ "]"
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -292,12 +283,8 @@ let rec free_vars tm = match tm with
       | [] -> []
     in aux t
   | TmProj (t, _) -> free_vars t
-  | TmList l ->
-      let rec aux list = match list with
-        | h::[] -> free_vars h
-        | h::t -> lunion (free_vars h) (aux t)
-        | [] -> []
-      in aux l
+  | TmNil _ ->
+      []
 
 ;;
 
@@ -350,8 +337,8 @@ let rec subst x s tm = match tm with
       TmRecord (List.combine (List.map fst t) (List.map (subst x s) (List.map snd t)))
   | TmProj (t, lb) ->
       TmProj (subst x s t, lb)
-  | TmList l ->
-      TmList (List.map (subst x s) l)
+  | TmNil t ->
+      TmNil t
 ;;
 
 let rec isnumericval tm = match tm with

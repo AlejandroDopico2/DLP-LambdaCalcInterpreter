@@ -6,7 +6,7 @@ type ty =
   | TyString
   | TyTuple of ty list
   | TyRecord of (string * ty) list
-  | TyList of ty list
+  | TyList of ty
 ;;
 
 type 'a context =
@@ -31,7 +31,7 @@ type term =
   | TmString of string
   | TmConcat of term * term
   | TmProj of term * string
-  | TmList of term list
+  | TmNil of ty
 ;;
 
 type command = 
