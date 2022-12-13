@@ -35,6 +35,7 @@ type term =
   | TmCons of ty * term * term
   | TmIsnil of ty * term
   | TmHead of ty * term
+  | TmTail of ty * term
 ;;
 
 type command = 

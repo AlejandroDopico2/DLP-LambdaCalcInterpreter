@@ -17,12 +17,14 @@
 %token IN
 %token BOOL
 %token NAT
+%token LIST
 %token CONCAT
 %token STRING
 %token NIL
 %token CONS
 %token ISNIL
 %token HEAD
+%token TAIL
 
 %token LPAREN
 %token RPAREN
@@ -113,6 +115,8 @@ atomicTerm :
       { TmIsnil ($3, $5) }
   | HEAD LBRACKET ty RBRACKET atomicTerm 
       { TmHead ($3, $5) }
+  | TAIL LBRACKET ty RBRACKET atomicTerm 
+      { TmTail ($3, $5) }
 
 tupleTerm : 
     term 
@@ -121,9 +125,9 @@ tupleTerm :
       { $1::$3 }
 
 recordTerm :
-    STRINGV COLON term
+    STRINGV EQ term
         { [($1, $3)]}
-  | STRINGV COLON term COMMA recordTerm
+  | STRINGV EQ term COMMA recordTerm
         { ($1, $3)::$5 }
 
 ty :
@@ -140,5 +144,7 @@ atomicTy :
   | NAT
       { TyNat }
   | STRING 
-      { TyString}
+      { TyString }
+  | LIST LBRACKET ty RBRACKET
+      { TyList $3 }
 
