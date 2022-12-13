@@ -34,6 +34,7 @@ type term =
   | TmProj of term * string
   | TmNil of ty
   | TmCons of ty * term * term
+  | TmIsnil of ty * term
 ;;
 
 type command = 
@@ -176,7 +177,7 @@ let rec typeof ctx tm = match tm with
         | _ -> raise (Type_error ("label " ^ s  ^ " not found")))
       | _ -> raise (Type_error "tuple type expective"))
 
-    (* T-Cons *)
+    (* T-Nil *)
   | TmNil t ->
       TyList t
 
@@ -189,6 +190,14 @@ let rec typeof ctx tm = match tm with
             if ty21 = tyT1 then TyList ty
             else raise (Type_error "Types of list don't match")
         | _ -> raise (Type_error "arrow type expected")
+      )
+
+    (* T-Isnil *)
+  | TmIsnil (ty, t1) ->
+      let tyT1 = typeof ctx t1 in
+      (match tyT1 with
+          TyList t -> TyBool
+        | _ -> raise (Type_error "Type list expected") 
       )
   ;;
 
@@ -246,6 +255,11 @@ let rec string_of_term = function
   | TmNil t -> "nil[" ^ string_of_ty t ^ "]"
   | TmCons (ty, t1, t2) ->
       "cons[" ^ string_of_ty ty ^ "] " ^ string_of_term t1 ^ " " ^ string_of_term t2
+  | TmIsnil (ty, TmNil(_)) ->
+      "false"
+  | TmIsnil (ty, TmCons(_, _, _)) ->
+      "false"
+      (*string_of_ty (TmIsnil (ty, t)) *)
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -304,6 +318,8 @@ let rec free_vars tm = match tm with
       []
   | TmCons (ty, t1, t2) ->
       lunion (free_vars t1) (free_vars t2)
+  | TmIsnil (ty, t) ->
+      free_vars t
 
 ;;
 
@@ -360,6 +376,8 @@ let rec subst x s tm = match tm with
       TmNil t
   | TmCons (ty, t1, t2) ->
       TmCons (ty, (subst x s t1), (subst x s t2))
+  | TmIsnil (ty, t) ->
+      TmIsnil (ty, (subst x s t))
 ;;
 
 let rec isnumericval tm = match tm with
@@ -498,14 +516,22 @@ let rec eval1 vctx tm = match tm with
   | TmProj (t, s) ->
     let t' = eval1 vctx t in TmProj (t', s)
 
-  (* E-Cons2*)
+    (* E-Cons2*)
   | TmCons (ty, v1, t2) when isval v1 ->
     let t2' = eval1 vctx t2 in TmCons (ty, v1, t2')
 
     (* E-Cons1*)
   | TmCons (ty, t1, t2) ->
     let t1' = eval1 vctx t1 in TmCons (ty, t1', t2)
-      
+
+    (* E-IsnilNil*)
+  | TmIsnil (ty, (TmNil _)) ->
+      TmTrue
+
+    (* E-IsnilCons*)
+  | TmIsnil (ty, TmCons (_, v1, v2)) when (isval v1 && isval v2) ->
+      TmFalse
+
   | _ ->
       raise NoRuleApplies
 ;;

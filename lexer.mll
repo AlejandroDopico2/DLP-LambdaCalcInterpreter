@@ -25,6 +25,7 @@ rule token = parse
   | "String"    { STRING }
   | "nil"       { NIL }
   | "cons"      { CONS }
+  | "isnil"     { ISNIL }
   | '('         { LPAREN }
   | ')'         { RPAREN }
   | '.'         { DOT }
