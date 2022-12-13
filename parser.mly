@@ -22,6 +22,7 @@
 %token NIL
 %token CONS
 %token ISNIL
+%token HEAD
 
 %token LPAREN
 %token RPAREN
@@ -110,6 +111,8 @@ atomicTerm :
       { TmCons ($3, $5, $6) }
   | ISNIL LBRACKET ty RBRACKET atomicTerm 
       { TmIsnil ($3, $5) }
+  | HEAD LBRACKET ty RBRACKET atomicTerm 
+      { TmHead ($3, $5) }
 
 tupleTerm : 
     term 
