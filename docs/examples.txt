@@ -17,11 +17,25 @@ let x = 5 in let id_nat = L x:Nat. x in id_nat x
 let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in sum 21 34
 let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in let prodaux = lambda f. (lambda n. (lambda m. if (iszero m) then 0 else sum n (f n (pred m)))) in let prod = fix prodaux in prod 12 5
 
+ ---- PRODUCTO ----
+
 letrec sum : Nat -> Nat -> Nat =
     lambda n: Nat. lambda m: Nat. if iszero n then m else succ (sum (pred n) m)
     in letrec prod : Nat -> Nat -> Nat =
     L m:Nat. L n:Nat. if iszero m then 0 else sum n ( prod (pred m) n)
         in prod 5 10;;
+
+ ---- FACTORIAL ----
+
+letrec sum : Nat -> Nat -> Nat =
+    lambda n: Nat. lambda m: Nat. if iszero n then m else succ (sum (pred n) m)
+        in letrec prod : Nat -> Nat -> Nat =
+        lambda m:Nat. lambda n:Nat. if iszero m then 0 else sum n ( prod (pred m) n)
+            in letrec factorial : Nat -> Nat = 
+                lambda n: Nat. if iszero n then 1 else prod n (factorial (pred n))
+                in factorial 0;;
+
+ ---- LONGITUD DE LISTA ----
 
 letrec sum : Nat -> Nat -> Nat = 
     lambda n: Nat. lambda m: Nat. if iszero n then m else succ (sum (pred n) m)
@@ -29,10 +43,14 @@ letrec sum : Nat -> Nat -> Nat =
         lambda l : List[Nat]. if isnil[Nat] l then 0 else sum 1 (length (tail[Nat] l))
         in length cons[Nat] 1 (cons[Nat] 2 (cons[Nat] 3 nil[Nat]));;
 
+ ---- CONCATENACIÓN DE DOS LISTAS ----
+
 letrec append: List[Nat] -> List[Nat] -> List[Nat] = 
     lambda l1 : List[Nat]. lambda l2 : List[Nat]. if isnil[Nat] l1 then l2 else cons[Nat] (head[Nat] l1) (append (tail[Nat] l1) l2)
     in append (cons[Nat] 1 (cons[Nat] 2 (cons[Nat] 3 nil[Nat]))) (cons[Nat] 2 (cons[Nat] 3 (cons[Nat] 4 nil[Nat])));;
-    
+
+ ---- MAPEO DE LISTA ----
+  
 letrec map: (Nat -> Nat) -> List[Nat] -> List[Nat] =
     lambda f : Nat -> Nat. lambda l : List[Nat]. if isnil[Nat] l then nil[Nat] else cons[Nat] (f (head[Nat] l)) (map  f (tail[Nat] l))
-    in map (lambda x: Nat.x1) (cons[Nat] 1 (cons[Nat] 2 (cons[Nat] 3 nil[Nat])));;
+    in map (lambda x: Nat. 1) (cons[Nat] 1 (cons[Nat] 2 (cons[Nat] 3 nil[Nat])));;
