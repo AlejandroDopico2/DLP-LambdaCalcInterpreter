@@ -17,6 +17,12 @@ let x = 5 in let id_nat = L x:Nat. x in id_nat x
 let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in sum 21 34
 let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in let prodaux = lambda f. (lambda n. (lambda m. if (iszero m) then 0 else sum n (f n (pred m)))) in let prod = fix prodaux in prod 12 5
 
+letrec sum : Nat -> Nat -> Nat =
+    lambda n: Nat. lambda m: Nat. if iszero n then m else succ (sum (pred n) m)
+    in letrec prod : Nat -> Nat -> Nat =
+    L m:Nat. L n:Nat. if iszero m then 0 else sum n ( prod (pred m) n)
+        in prod 5 10;;
+
 letrec sum : Nat -> Nat -> Nat = 
     lambda n: Nat. lambda m: Nat. if iszero n then m else succ (sum (pred n) m)
     in letrec length: List[Nat] -> Nat = 
