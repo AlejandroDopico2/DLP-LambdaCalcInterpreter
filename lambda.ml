@@ -424,7 +424,7 @@ let rec isval tm = match tm with
   | TmTuple list -> List.for_all (fun t -> isval t) list
   | TmRecord list -> List.for_all (fun t -> isval t) (List.map snd list)
   | TmNil _ -> true
-  | TmCons (_, _, t) -> isval t
+  | TmCons (_, t1, t2) -> isval t1 && isval t2
   | t when isnumericval t -> true
   | _ -> false
 ;;
