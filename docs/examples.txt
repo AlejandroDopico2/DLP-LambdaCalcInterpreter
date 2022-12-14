@@ -17,15 +17,16 @@ let x = 5 in let id_nat = L x:Nat. x in id_nat x
 let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in sum 21 34
 let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in let prodaux = lambda f. (lambda n. (lambda m. if (iszero m) then 0 else sum n (f n (pred m)))) in let prod = fix prodaux in prod 12 5
 
-
-let id_list = L x:List[Nat]. x in id_list cons[Nat] 3 nil[Nat];;
-
 letrec sum : Nat -> Nat -> Nat = 
     lambda n: Nat. lambda m: Nat. if iszero n then m else succ (sum (pred n) m)
     in letrec length: List[Nat] -> Nat = 
         lambda l : List[Nat]. if isnil[Nat] l then 0 else sum 1 (length (tail[Nat] l))
-        in length cons[Nat] 6 (cons[Nat] 8 (cons[Nat] 7 nil[Nat]));;
+        in length cons[Nat] 1 (cons[Nat] 2 (cons[Nat] 3 nil[Nat]));;
 
-letrec recorrer: List[Nat] -> List[Nat] = 
-    lambda l: List[Nat]. if isnil[Nat] l then nil[Nat] else recorrer (tail[Nat] l)
-    in recorrer cons[Nat] 3 nil[Nat];;
+letrec append: List[Nat] -> List[Nat] -> List[Nat] = 
+    lambda l1 : List[Nat]. lambda l2 : List[Nat]. if isnil[Nat] l1 then l2 else cons[Nat] (head[Nat] l1) (append (tail[Nat] l1) l2)
+    in append (cons[Nat] 1 (cons[Nat] 2 (cons[Nat] 3 nil[Nat]))) (cons[Nat] 2 (cons[Nat] 3 (cons[Nat] 4 nil[Nat])));;
+    
+letrec map: (Nat -> Nat) -> List[Nat] -> List[Nat] =
+    lambda f : Nat -> Nat. lambda l : List[Nat]. if isnil[Nat] l then nil[Nat] else cons[Nat] (f (head[Nat] l)) (map  f (tail[Nat] l))
+    in map (lambda x: Nat.x1) (cons[Nat] 1 (cons[Nat] 2 (cons[Nat] 3 nil[Nat])));;
